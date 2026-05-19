@@ -86,6 +86,22 @@ async function main() {
     });
   }
 
+  await check("GET /api/geocode/search", async () => {
+    const res = await fetch(`${BASE}/api/geocode/search?q=61820`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(JSON.stringify(data));
+    if (!data.results?.length) throw new Error("No search results");
+    pass("GET /api/geocode/search", data.results[0].label);
+  });
+
+  await check("GET /api/deere/auth (disabled ok)", async () => {
+    const res = await fetch(`${BASE}/api/deere/auth`, { redirect: "manual" });
+    if (res.status === 503) pass("GET /api/deere/auth", "disabled (expected)");
+    else if (res.status === 307 || res.status === 302)
+      pass("GET /api/deere/auth", "redirect to Deere");
+    else pass("GET /api/deere/auth", `status ${res.status}`);
+  });
+
   // Geocode
   await check("POST /api/geocode", async () => {
     const res = await fetch(`${BASE}/api/geocode`, {

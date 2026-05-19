@@ -74,7 +74,8 @@ export type FieldProfileFetchResult = {
 export async function fetchFieldProfile(
   lat: number,
   lon: number,
-  acres: number
+  acres: number,
+  boundary?: GeoJSON.FeatureCollection
 ): Promise<FieldProfileFetchResult> {
   let usedDemoFallback = false;
   const failedApis: string[] = [];
@@ -118,6 +119,7 @@ export async function fetchFieldProfile(
     ]);
 
     const base = buildMockFieldProfile(lat, lon, acres, state);
+    if (boundary) base.boundary = boundary;
 
     if (geo?.county) base.county = geo.county;
     if (geo?.state) base.state = geo.state;
@@ -138,8 +140,10 @@ export async function fetchFieldProfile(
     usedDemoFallback = failedApis.length > 0;
     return { profile: base, usedDemoFallback };
   } catch {
+    const profile = buildMockFieldProfile(lat, lon, acres);
+    if (boundary) profile.boundary = boundary;
     return {
-      profile: buildMockFieldProfile(lat, lon, acres),
+      profile,
       usedDemoFallback: true,
     };
   }

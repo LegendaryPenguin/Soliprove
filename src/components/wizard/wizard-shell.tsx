@@ -36,7 +36,7 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
           >
             ← Back to home
           </Link>
-          <h1 className="text-2xl lg:text-3xl font-bold text-[#123524]">
+          <h1 className="text-2xl lg:text-3xl font-bold text-[#123524] font-display">
             Build your prescription
           </h1>
           <p className="text-[#6B7280] text-sm lg:text-base max-w-2xl">
@@ -67,7 +67,7 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1fr_280px] items-start">
-          <Card className="border-[#E7E0D0] bg-white shadow-md overflow-hidden">
+          <Card className="card-elevated border-[#E7E0D0] overflow-hidden">
             <CardContent className="p-5 sm:p-8">
               {showLoadingPanel && (
                 <div className="mb-6 rounded-lg bg-[#FAF7EF] border border-[#E7E0D0] p-4 text-sm">

@@ -19,6 +19,8 @@ import { buildRecommendation } from "@/lib/recommendation";
 import { matchPeers } from "@/lib/peer/similarity";
 import { fetchFieldProfile } from "@/lib/mock/field-profile";
 import { STEP_ORDER, getStepIndex } from "@/lib/wizard/steps";
+import { createDemoFieldBoundary } from "@/lib/geo/field-boundary";
+import type { MapTileMode } from "@/components/map/field-map";
 
 const STORAGE_KEY = "soilprove-state";
 
@@ -37,6 +39,9 @@ export type DraftLocation = {
   lon: number;
   acres: number;
   zip?: string;
+  boundary?: GeoJSON.FeatureCollection;
+  pinPlaced: boolean;
+  boundaryDrawn: boolean;
 };
 
 const DEFAULT_DRAFT: DraftLocation = {
@@ -44,6 +49,8 @@ const DEFAULT_DRAFT: DraftLocation = {
   lon: -88.2434,
   acres: 40,
   zip: "61820",
+  pinPlaced: true,
+  boundaryDrawn: false,
 };
 
 type SoilProveContextValue = Omit<AppState, "farmerInput"> & {
@@ -51,6 +58,14 @@ type SoilProveContextValue = Omit<AppState, "farmerInput"> & {
   step: WizardStep;
   draftLocation: DraftLocation;
   setDraftLocation: (draft: Partial<DraftLocation>) => void;
+  setBoundary: (boundary: GeoJSON.FeatureCollection, acres: number) => void;
+  locationError: string | null;
+  setLocationError: (msg: string | null) => void;
+  mapTileMode: MapTileMode;
+  setMapTileMode: (mode: MapTileMode) => void;
+  mapFullscreen: boolean;
+  setMapFullscreen: (v: boolean) => void;
+  fieldStepChecks: { pin: boolean; boundary: boolean; acres: boolean };
   setStep: (step: WizardStep) => void;
   goBack: () => void;
   goNext: () => Promise<void>;
@@ -59,7 +74,12 @@ type SoilProveContextValue = Omit<AppState, "farmerInput"> & {
   continueLabel: () => string;
   isContinuing: boolean;
   demoFallbackActive: boolean;
-  setFieldLocation: (lat: number, lon: number, acres: number) => Promise<void>;
+  setFieldLocation: (
+    lat: number,
+    lon: number,
+    acres: number,
+    boundary?: GeoJSON.FeatureCollection
+  ) => Promise<void>;
   setFarmerInput: (input: Partial<FarmerInput>) => void;
   runRecommendation: () => void;
   profileChecklist: string[];
@@ -79,7 +99,16 @@ export function SoilProveProvider({ children }: { children: React.ReactNode }) {
   const [profileChecklist, setProfileChecklist] = useState<string[]>([]);
   const [draftLocation, setDraftLocationState] = useState<DraftLocation>(DEFAULT_DRAFT);
   const [demoFallbackActive, setDemoFallbackActive] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [mapTileMode, setMapTileMode] = useState<MapTileMode>("satellite");
+  const [mapFullscreen, setMapFullscreen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+
+  const fieldStepChecks = {
+    pin: draftLocation.pinPlaced,
+    boundary: draftLocation.boundaryDrawn || Boolean(draftLocation.boundary),
+    acres: draftLocation.acres > 0,
+  };
 
   useEffect(() => {
     try {
@@ -96,6 +125,7 @@ export function SoilProveProvider({ children }: { children: React.ReactNode }) {
       if (parsed.step) setStep(parsed.step);
       if (parsed.draftLocation) setDraftLocationState(parsed.draftLocation);
       if (parsed.demoFallbackActive) setDemoFallbackActive(parsed.demoFallbackActive);
+      if (parsed.mapTileMode) setMapTileMode(parsed.mapTileMode);
     } catch {
       /* ignore */
     }
@@ -114,6 +144,7 @@ export function SoilProveProvider({ children }: { children: React.ReactNode }) {
         step,
         draftLocation,
         demoFallbackActive,
+        mapTileMode,
       })
     );
   }, [
@@ -124,15 +155,37 @@ export function SoilProveProvider({ children }: { children: React.ReactNode }) {
     step,
     draftLocation,
     demoFallbackActive,
+    mapTileMode,
     hydrated,
   ]);
 
   const setDraftLocation = useCallback((draft: Partial<DraftLocation>) => {
-    setDraftLocationState((prev) => ({ ...prev, ...draft }));
+    setDraftLocationState((prev) => ({
+      ...prev,
+      ...draft,
+      pinPlaced: draft.pinPlaced ?? prev.pinPlaced ?? true,
+    }));
   }, []);
 
+  const setBoundary = useCallback(
+    (boundary: GeoJSON.FeatureCollection, acres: number) => {
+      setDraftLocationState((prev) => ({
+        ...prev,
+        boundary,
+        acres,
+        boundaryDrawn: true,
+      }));
+    },
+    []
+  );
+
   const setFieldLocation = useCallback(
-    async (lat: number, lon: number, acres: number) => {
+    async (
+      lat: number,
+      lon: number,
+      acres: number,
+      boundary?: GeoJSON.FeatureCollection
+    ) => {
       setProfileLoading(true);
       const checks = [
         "County detected",
@@ -148,10 +201,25 @@ export function SoilProveProvider({ children }: { children: React.ReactNode }) {
         setProfileChecklist((prev) => [...prev, checks[i]]);
       }
 
-      const { profile, usedDemoFallback } = await fetchFieldProfile(lat, lon, acres);
+      const resolvedBoundary =
+        boundary ?? createDemoFieldBoundary(lat, lon, acres);
+
+      const { profile, usedDemoFallback } = await fetchFieldProfile(
+        lat,
+        lon,
+        acres,
+        resolvedBoundary
+      );
       setField(profile);
       setDemoFallbackActive(usedDemoFallback);
-      setDraftLocationState({ lat, lon, acres });
+      setDraftLocationState((prev) => ({
+        ...prev,
+        lat,
+        lon,
+        acres,
+        boundary: resolvedBoundary,
+        boundaryDrawn: Boolean(boundary),
+      }));
       setProfileLoading(false);
     },
     []
@@ -174,7 +242,11 @@ export function SoilProveProvider({ children }: { children: React.ReactNode }) {
   const canGoNext = useCallback(() => {
     switch (step) {
       case "field":
-        return draftLocation.acres > 0;
+        return (
+          fieldStepChecks.pin &&
+          fieldStepChecks.acres &&
+          draftLocation.acres > 0
+        );
       case "context":
         return Boolean(field);
       case "input":
@@ -188,7 +260,7 @@ export function SoilProveProvider({ children }: { children: React.ReactNode }) {
       default:
         return false;
     }
-  }, [step, draftLocation, field, recommendation, peerMatch]);
+  }, [step, draftLocation, field, recommendation, peerMatch, fieldStepChecks]);
 
   const continueLabel = useCallback(() => {
     switch (step) {
@@ -216,14 +288,18 @@ export function SoilProveProvider({ children }: { children: React.ReactNode }) {
     try {
       switch (step) {
         case "field": {
-          const { lat, lon, acres } = draftLocation;
+          const { lat, lon, acres, boundary } = draftLocation;
+          const resolvedBoundary =
+            boundary ?? createDemoFieldBoundary(lat, lon, acres);
           const unchanged =
             field &&
             Math.abs(field.lat - lat) < 0.0001 &&
             Math.abs(field.lon - lon) < 0.0001 &&
             field.acres === acres;
           if (!unchanged) {
-            await setFieldLocation(lat, lon, acres);
+            await setFieldLocation(lat, lon, acres, resolvedBoundary);
+          } else if (field && !field.boundary) {
+            setField({ ...field, boundary: resolvedBoundary });
           }
           setStep("context");
           break;
@@ -258,6 +334,7 @@ export function SoilProveProvider({ children }: { children: React.ReactNode }) {
     setDraftLocationState(DEFAULT_DRAFT);
     setDemoFallbackActive(false);
     setProfileChecklist([]);
+    setLocationError(null);
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
@@ -272,6 +349,14 @@ export function SoilProveProvider({ children }: { children: React.ReactNode }) {
         step,
         draftLocation,
         setDraftLocation,
+        setBoundary,
+        locationError,
+        setLocationError,
+        mapTileMode,
+        setMapTileMode,
+        mapFullscreen,
+        setMapFullscreen,
+        fieldStepChecks,
         setStep,
         goBack,
         goNext,

@@ -1,15 +1,35 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  GeoJSON,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
+import L from "leaflet";
+import "@geoman-io/leaflet-geoman-free";
+import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 import type { RecommendationZone } from "@/types";
+import {
+  acresFromBoundary,
+  centroidFromBoundary,
+} from "@/lib/geo/field-boundary";
+
+export type MapTileMode = "satellite" | "street";
 
 type FieldMapProps = {
   lat: number;
   lon: number;
   boundary?: GeoJSON.FeatureCollection;
   zones?: RecommendationZone[];
-  onPinDrop?: (lat: number, lon: number) => void;
+  onPinChange?: (lat: number, lon: number) => void;
+  onBoundaryChange?: (boundary: GeoJSON.FeatureCollection, acres: number) => void;
   interactive?: boolean;
+  enableDraw?: boolean;
+  tileMode?: MapTileMode;
   className?: string;
 };
 
@@ -19,95 +39,238 @@ const CONFIDENCE_COLORS: Record<string, string> = {
   low: "#EF4444",
 };
 
+const pinIcon = L.icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+
+function MapRecenter({ lat, lon, boundary }: { lat: number; lon: number; boundary?: GeoJSON.FeatureCollection }) {
+  const map = useMap();
+  useEffect(() => {
+    if (boundary?.features?.length) {
+      const layer = L.geoJSON(boundary);
+      map.fitBounds(layer.getBounds(), { padding: [24, 24], maxZoom: 17 });
+    } else {
+      map.setView([lat, lon], Math.max(map.getZoom(), 16));
+    }
+  }, [lat, lon, boundary, map]);
+  return null;
+}
+
+function MapClickHandler({
+  onPinChange,
+}: {
+  onPinChange?: (lat: number, lon: number) => void;
+}) {
+  useMapEvents({
+    click(e) {
+      onPinChange?.(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
+function GeomanDraw({
+  enableDraw,
+  boundary,
+  onBoundaryChange,
+}: {
+  enableDraw: boolean;
+  boundary?: GeoJSON.FeatureCollection;
+  onBoundaryChange?: (b: GeoJSON.FeatureCollection, acres: number) => void;
+}) {
+  const map = useMap();
+  const drawnLayerRef = useRef<L.Layer | null>(null);
+
+  useEffect(() => {
+    if (!enableDraw) return;
+
+    map.pm.addControls({
+      position: "topright",
+      drawMarker: false,
+      drawCircle: false,
+      drawCircleMarker: false,
+      drawPolyline: false,
+      drawRectangle: true,
+      drawPolygon: true,
+      drawText: false,
+      editMode: true,
+      dragMode: true,
+      cutPolygon: false,
+      removalMode: true,
+    });
+
+    const onCreate = (e: { layer: L.Layer }) => {
+      if (drawnLayerRef.current) {
+        map.removeLayer(drawnLayerRef.current);
+      }
+      drawnLayerRef.current = e.layer;
+      const gj = (e.layer as L.Polygon).toGeoJSON() as GeoJSON.Feature;
+      const fc: GeoJSON.FeatureCollection = {
+        type: "FeatureCollection",
+        features: [gj],
+      };
+      onBoundaryChange?.(fc, acresFromBoundary(fc));
+    };
+
+    const onUpdate = () => {
+      if (!drawnLayerRef.current) return;
+      const gj = (drawnLayerRef.current as L.Polygon).toGeoJSON() as GeoJSON.Feature;
+      const fc: GeoJSON.FeatureCollection = {
+        type: "FeatureCollection",
+        features: [gj],
+      };
+      onBoundaryChange?.(fc, acresFromBoundary(fc));
+    };
+
+    // Geoman leaflet events
+    map.on("pm:create", onCreate as L.LeafletEventHandlerFn);
+    map.on("pm:edit", onUpdate as L.LeafletEventHandlerFn);
+    map.on("pm:remove", () => {
+      drawnLayerRef.current = null;
+    });
+
+    return () => {
+      map.off("pm:create", onCreate as L.LeafletEventHandlerFn);
+      map.off("pm:edit", onUpdate as L.LeafletEventHandlerFn);
+      map.pm.removeControls();
+    };
+  }, [enableDraw, map, onBoundaryChange]);
+
+  useEffect(() => {
+    if (!enableDraw || !boundary?.features?.length || drawnLayerRef.current) return;
+    const layer = L.geoJSON(boundary);
+    layer.eachLayer((l) => {
+      drawnLayerRef.current = l;
+      l.addTo(map);
+    });
+  }, [boundary, enableDraw, map]);
+
+  return null;
+}
+
 export function FieldMap({
   lat,
   lon,
   boundary,
   zones,
-  onPinDrop,
+  onPinChange,
+  onBoundaryChange,
   interactive = false,
+  enableDraw = false,
+  tileMode = "satellite",
   className = "h-[320px] w-full rounded-xl",
 }: FieldMapProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
+  const satelliteUrl =
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+  const streetUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
-  useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
+  const zoneGeoJson = useMemo(() => {
+    if (!zones?.length) return null;
+    return {
+      type: "FeatureCollection" as const,
+      features: zones
+        .filter((z) => z.geometry)
+        .map((z) => ({
+          type: "Feature" as const,
+          properties: {
+            zone: z.zone,
+            confidence: z.confidence,
+          },
+          geometry: z.geometry!,
+        })),
+    };
+  }, [zones]);
 
-    let cancelled = false;
+  const handleDragEnd = useCallback(
+    (e: L.DragEndEvent) => {
+      const pos = e.target.getLatLng();
+      onPinChange?.(pos.lat, pos.lng);
+    },
+    [onPinChange]
+  );
 
-    (async () => {
-      const L = (await import("leaflet")).default;
-      await import("leaflet/dist/leaflet.css");
+  return (
+    <MapContainer
+      center={[lat, lon]}
+      zoom={16}
+      scrollWheelZoom={interactive || enableDraw}
+      className={className}
+      style={{ height: "100%", width: "100%", minHeight: 280 }}
+    >
+      <TileLayer
+        attribution={
+          tileMode === "satellite"
+            ? "Esri, Maxar, Earthstar"
+            : "&copy; OpenStreetMap"
+        }
+        url={tileMode === "satellite" ? satelliteUrl : streetUrl}
+      />
+      {tileMode === "satellite" && (
+        <TileLayer
+          url={streetUrl}
+          opacity={0.15}
+          attribution=""
+        />
+      )}
 
-      // Fix default marker paths in bundled Next.js
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-      });
+      <MapRecenter lat={lat} lon={lon} boundary={boundary} />
 
-      if (cancelled || !containerRef.current) return;
+      {boundary && !enableDraw && (
+        <GeoJSON
+          key={JSON.stringify(boundary)}
+          data={boundary}
+          style={{
+            color: "#1F6F43",
+            weight: 2,
+            fillOpacity: 0.2,
+            fillColor: "#1F6F43",
+          }}
+        />
+      )}
 
-      const map = L.map(containerRef.current, {
-        center: [lat, lon],
-        zoom: 14,
-        scrollWheelZoom: interactive,
-      });
-
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
-      }).addTo(map);
-
-      if (boundary?.features?.[0]?.geometry) {
-        L.geoJSON(boundary, {
-          style: { color: "#1F6F43", weight: 2, fillOpacity: 0.15, fillColor: "#1F6F43" },
-        }).addTo(map);
-      }
-
-      if (zones?.length) {
-        zones.forEach((z) => {
-          if (!z.geometry) return;
-          L.geoJSON(z.geometry, {
-            style: {
-              color: CONFIDENCE_COLORS[z.confidence] ?? "#6B7280",
+      {zoneGeoJson && (
+        <GeoJSON
+          data={zoneGeoJson}
+          style={(feature) => {
+            const c =
+              CONFIDENCE_COLORS[
+                String(feature?.properties?.confidence ?? "medium")
+              ] ?? "#6B7280";
+            return {
+              color: c,
               weight: 2,
               fillOpacity: 0.45,
-              fillColor: CONFIDENCE_COLORS[z.confidence],
-            },
-          })
-            .bindPopup(
-              `<strong>Zone ${z.zone}</strong><br/>N: ${z.nRate} | P: ${z.p2o5Rate} | K: ${z.k2oRate}`
-            )
-            .addTo(map);
-        });
-      }
+              fillColor: c,
+            };
+          }}
+        />
+      )}
 
-      const marker = L.marker([lat, lon]).addTo(map);
+      <Marker
+        position={[lat, lon]}
+        icon={pinIcon}
+        draggable={interactive || enableDraw}
+        eventHandlers={{ dragend: handleDragEnd }}
+      />
 
-      if (interactive && onPinDrop) {
-        map.on("click", (e: L.LeafletMouseEvent) => {
-          marker.setLatLng(e.latlng);
-          onPinDrop(e.latlng.lat, e.latlng.lng);
-        });
-      }
+      {interactive && onPinChange && !enableDraw && (
+        <MapClickHandler onPinChange={onPinChange} />
+      )}
 
-      mapRef.current = map;
-    })();
-
-    return () => {
-      cancelled = true;
-      mapRef.current?.remove();
-      mapRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!mapRef.current) return;
-    mapRef.current.setView([lat, lon], mapRef.current.getZoom());
-  }, [lat, lon]);
-
-  return <div ref={containerRef} className={className} />;
+      {enableDraw && (
+        <GeomanDraw
+          enableDraw={enableDraw}
+          boundary={boundary}
+          onBoundaryChange={onBoundaryChange}
+        />
+      )}
+    </MapContainer>
+  );
 }
+
+export { centroidFromBoundary, acresFromBoundary };

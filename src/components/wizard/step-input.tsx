@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { parseSoilTestCsv } from "@/lib/parse-soil-csv";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSoilProve } from "@/context/soilprove-context";
@@ -10,6 +12,8 @@ import type { FarmerInput } from "@/types";
 export function StepInput() {
   const { farmerInput, setFarmerInput, field } = useSoilProve();
   const [advanced, setAdvanced] = useState(false);
+  const [csvError, setCsvError] = useState<string | null>(null);
+  const csvRef = useRef<HTMLInputElement>(null);
   const nDefault = field?.fertilizerPrices?.nitrogenDefaultPerLb ?? 0.52;
 
   return (
@@ -160,7 +164,35 @@ export function StepInput() {
         {advanced ? "− Hide" : "+ Show"} optional soil test
       </Button>
       {advanced && (
-        <div className="grid sm:grid-cols-2 gap-4 border-t border-[#E7E0D0] pt-4">
+        <div className="space-y-4 border-t border-[#E7E0D0] pt-4">
+          <div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => csvRef.current?.click()}
+            >
+              <Upload className="h-4 w-4" /> Upload soil test CSV
+            </Button>
+            <input
+              ref={csvRef}
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                if (!f) return;
+                try {
+                  setFarmerInput({ soilTest: parseSoilTestCsv(await f.text()) });
+                  setCsvError(null);
+                } catch (err) {
+                  setCsvError(err instanceof Error ? err.message : "Invalid CSV");
+                }
+              }}
+            />
+            {csvError && <p className="text-xs text-red-600 mt-1">{csvError}</p>}
+          </div>
+        <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="ph">pH</Label>
             <Input
@@ -231,6 +263,7 @@ export function StepInput() {
               }
             />
           </div>
+        </div>
         </div>
       )}
     </div>
