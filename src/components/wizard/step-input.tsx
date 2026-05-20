@@ -10,7 +10,7 @@ import { useSoilProve } from "@/context/soilprove-context";
 import type { FarmerInput } from "@/types";
 
 export function StepInput() {
-  const { farmerInput, setFarmerInput, field } = useSoilProve();
+  const { farmerInput, setFarmerInput, field, inputError } = useSoilProve();
   const [advanced, setAdvanced] = useState(false);
   const [csvError, setCsvError] = useState<string | null>(null);
   const csvRef = useRef<HTMLInputElement>(null);
@@ -18,6 +18,11 @@ export function StepInput() {
 
   return (
     <div className="space-y-6 max-w-xl">
+      {inputError && (
+        <p className="text-sm text-red-600 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+          {inputError}
+        </p>
+      )}
       <p className="text-sm text-[#6B7280] rounded-lg bg-[#FAF7EF] border border-[#E7E0D0] px-3 py-2">
         Without a soil test, SoilProve uses conservative P/K estimates. Add lab
         values in advanced mode for a tighter prescription.
@@ -200,7 +205,7 @@ export function StepInput() {
               type="number"
               step="0.1"
               placeholder="6.5"
-              defaultValue={farmerInput.soilTest?.ph}
+              value={farmerInput.soilTest?.ph}
               onChange={(e) =>
                 setFarmerInput({
                   soilTest: {
@@ -218,7 +223,7 @@ export function StepInput() {
               type="number"
               step="0.1"
               placeholder="3.8"
-              defaultValue={farmerInput.soilTest?.organicMatterPct}
+              value={farmerInput.soilTest?.organicMatterPct}
               onChange={(e) =>
                 setFarmerInput({
                   soilTest: {
@@ -235,7 +240,7 @@ export function StepInput() {
               id="pPpm"
               type="number"
               placeholder="25"
-              defaultValue={farmerInput.soilTest?.phosphorusPpm}
+              value={farmerInput.soilTest?.phosphorusPpm}
               onChange={(e) =>
                 setFarmerInput({
                   soilTest: {
@@ -252,7 +257,7 @@ export function StepInput() {
               id="kPpm"
               type="number"
               placeholder="180"
-              defaultValue={farmerInput.soilTest?.potassiumPpm}
+              value={farmerInput.soilTest?.potassiumPpm}
               onChange={(e) =>
                 setFarmerInput({
                   soilTest: {

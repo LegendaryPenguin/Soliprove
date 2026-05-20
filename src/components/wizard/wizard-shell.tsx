@@ -21,6 +21,7 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
     demoFallbackActive,
     profileChecklist,
     profileLoading,
+    resetWizard,
   } = useSoilProve();
 
   const config = getStepConfig(step);
@@ -30,12 +31,29 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-[calc(100vh-3.5rem)] bg-[#FAF7EF]">
       <div className="mx-auto max-w-6xl px-4 py-6 lg:py-10 space-y-6">
         <div className="space-y-1">
-          <Link
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
             href="/"
             className="text-xs text-[#6B7280] hover:text-[#1F6F43] inline-flex items-center gap-1"
           >
             ← Back to home
           </Link>
+            <Button
+              type="button"
+              variant="ghost"
+              className="text-xs text-[#6B7280] h-8 px-2"
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Reset the wizard and clear saved progress?"
+                  )
+                )
+                  resetWizard();
+              }}
+            >
+              Reset wizard
+            </Button>
+          </div>
           <h1 className="text-2xl lg:text-3xl font-bold text-[#123524] font-display">
             Build your prescription
           </h1>

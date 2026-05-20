@@ -1,4 +1,4 @@
-import { clamp } from "@/lib/utils";
+﻿import { clamp } from "@/lib/utils";
 import type { FarmerInput, FieldProfile } from "@/types";
 
 const STATE_BASE_RATES: Record<string, number> = {
@@ -40,7 +40,6 @@ export function recommendNitrogen(input: NitrogenInput): number {
   if (priceRatio > 0.2) rate -= 20;
   else if (priceRatio > 0.15) rate -= 10;
 
-  if (input.rotation === "corn_after_corn") rate += 30;
   if ((input.organicMatter ?? 0) > 4) rate -= 8;
   if (input.weatherRisk === "wet_spring") rate += 8;
   if (input.weatherRisk === "dry") rate -= 5;
@@ -71,3 +70,4 @@ export function weatherRiskFromProfile(
     return "wet_spring";
   return "normal";
 }
+

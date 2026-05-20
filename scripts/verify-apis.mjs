@@ -1,6 +1,6 @@
 const BASE = process.env.BASE_URL || "http://localhost:3000";
-const LAT = 40.1164;
-const LON = -88.2434;
+const LAT = 37.3059;
+const LON = -89.5181;
 
 const results = [];
 
@@ -24,7 +24,7 @@ async function check(name, fn) {
 
 const sampleField = {
   id: "test-field",
-  name: "Champaign County Field",
+  name: "Cape Girardeau County Field",
   lat: LAT,
   lon: LON,
   acres: 40,
@@ -87,7 +87,7 @@ async function main() {
   }
 
   await check("GET /api/geocode/search", async () => {
-    const res = await fetch(`${BASE}/api/geocode/search?q=61820`);
+    const res = await fetch(`${BASE}/api/geocode/search?q=63701`);
     const data = await res.json();
     if (!res.ok) throw new Error(JSON.stringify(data));
     if (!data.results?.length) throw new Error("No search results");
@@ -127,7 +127,7 @@ async function main() {
   // NASS
   await check("GET /api/nass", async () => {
     const res = await fetch(
-      `${BASE}/api/nass?state=IL&county=Champaign`
+      `${BASE}/api/nass?state=MO&county=Cape%20Girardeau`
     );
     const data = await res.json();
     if (!res.ok) throw new Error(JSON.stringify(data));
@@ -146,7 +146,7 @@ async function main() {
 
   // Fertilizer prices
   await check("GET /api/fertilizer-prices", async () => {
-    const res = await fetch(`${BASE}/api/fertilizer-prices?state=IL`);
+    const res = await fetch(`${BASE}/api/fertilizer-prices?state=MO`);
     const data = await res.json();
     if (!res.ok) throw new Error(JSON.stringify(data));
     if (!data.nitrogenDefaultPerLb) throw new Error("Missing N price");

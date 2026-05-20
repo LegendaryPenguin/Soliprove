@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useRef, useState } from "react";
 import dynamic from "next/dynamic";
@@ -271,7 +271,7 @@ export function StepField() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && void runSearch()}
-              placeholder="61820 or 123 Farm Rd, Champaign IL"
+              placeholder="63701 or 123 Farm Rd, Cape Girardeau MO"
             />
             <Button type="button" variant="secondary" onClick={() => void runSearch()}>
               Go
@@ -320,3 +320,4 @@ export function StepField() {
     </div>
   );
 }
+

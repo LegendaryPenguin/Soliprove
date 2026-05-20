@@ -103,7 +103,18 @@ export function StepContext() {
                   {item.value ?? "—"}
                 </p>
                 <SourceLabel
-                  source={item.source}
+                  source={
+                    item.label === "County corn yield benchmark" &&
+                    field.cropBenchmark?.dataAsOf
+                      ? `${item.source} (${field.cropBenchmark.dataAsOf})`
+                      : item.label === "Weather context" &&
+                          field.weather?.dataAsOf
+                        ? `${item.source} (${field.weather.dataAsOf})`
+                        : item.label === "Nitrogen price default" &&
+                            field.fertilizerPrices?.dataAsOf
+                          ? `${item.source} (${field.fertilizerPrices.dataAsOf})`
+                          : item.source
+                  }
                   confidence={
                     item.confidence
                       ? String(item.confidence).charAt(0).toUpperCase() +

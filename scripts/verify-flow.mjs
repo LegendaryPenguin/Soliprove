@@ -1,9 +1,9 @@
 /**
  * Simulates wizard data flow: geocode → parallel context APIs → recommendation → peers
  */
-const BASE = "http://localhost:3000";
-const LAT = 40.1164;
-const LON = -88.2434;
+const BASE = process.env.BASE_URL || "http://localhost:3000";
+const LAT = 37.3059;
+const LON = -89.5181;
 const ACRES = 40;
 
 async function main() {

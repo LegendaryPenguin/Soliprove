@@ -1,4 +1,4 @@
-import type { FarmerInput, FieldProfile, Recommendation } from "@/types";
+﻿import type { FarmerInput, FieldProfile, Recommendation } from "@/types";
 import { calculateConfidence, scoreToLabel } from "./confidence";
 import { hasSoilTest, getYieldGoal, recommendK, recommendP } from "./pk";
 import { calculateSavings } from "./savings";
@@ -7,7 +7,7 @@ import {
   recommendNitrogen,
   weatherRiskFromProfile,
 } from "./nitrogen";
-import { createZoneGeometries } from "@/lib/geo/field-boundary";
+import { createZonesForField } from "@/lib/geo/zones";
 
 export function buildRecommendation(
   field: FieldProfile,
@@ -26,7 +26,8 @@ export function buildRecommendation(
     rotation: input.rotation,
     cornPricePerBu: input.cornPricePerBu,
     nitrogenPricePerLb: nPrice,
-    organicMatter: input.soilTest?.organicMatterPct ?? field.soil?.organicMatterEstimate,
+    organicMatter:
+      input.soilTest?.organicMatterPct ?? field.soil?.organicMatterEstimate,
     weatherRisk: weatherRiskFromProfile(field),
   });
 
@@ -48,14 +49,6 @@ export function buildRecommendation(
     k2oRate,
     field.acres
   );
-
-  const zoneAcres = [
-    Math.round(field.acres * 0.38),
-    Math.round(field.acres * 0.3),
-    field.acres -
-      Math.round(field.acres * 0.38) -
-      Math.round(field.acres * 0.3),
-  ];
 
   const zoneRates = [
     {
@@ -84,17 +77,22 @@ export function buildRecommendation(
     },
   ];
 
-  const geometries = createZoneGeometries(field.lat, field.lon, field.acres);
+  const zoneGeometries = createZonesForField(
+    field.lat,
+    field.lon,
+    field.acres,
+    field.boundary
+  );
 
-  const zones = zoneRates.map((z, i) => ({
+  const zones = zoneRates.slice(0, zoneGeometries.length).map((z, i) => ({
     zone: z.zone,
-    acres: zoneAcres[i],
+    acres: zoneGeometries[i]?.acres ?? field.acres / zoneGeometries.length,
     nRate: z.n,
     p2o5Rate: z.p,
     k2oRate: z.k,
     confidence: z.confidence,
     reason: z.reason,
-    geometry: geometries[i],
+    geometry: zoneGeometries[i]?.geometry,
   }));
 
   const draft = { nRate, p2o5Rate, k2oRate };
@@ -107,6 +105,9 @@ export function buildRecommendation(
 
   const explanation: string[] = [
     `MRTN-inspired nitrogen estimate for ${field.state} with ${input.rotation.replace(/_/g, " ")} rotation.`,
+    field.boundary
+      ? "Management zones follow your drawn field boundary."
+      : "Uniform zones until a field boundary is drawn.",
     hasTest
       ? "P and K rates use your soil test categories and crop removal logic."
       : "Without a soil test, P and K use conservative maintenance estimates.",

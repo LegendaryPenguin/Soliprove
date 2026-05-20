@@ -20,6 +20,8 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+The wizard defaults to **Cape Girardeau County, Missouri** (ZIP 63701). See [docs/PHASES.md](docs/PHASES.md) for the full phase roadmap.
+
 Copy `.env.example` to `.env.local` and configure optional integrations.
 
 ## User flow

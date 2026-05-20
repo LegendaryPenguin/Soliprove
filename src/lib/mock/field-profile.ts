@@ -1,14 +1,16 @@
-import { createDemoFieldBoundary } from "@/lib/geo/field-boundary";
+﻿import { createDemoFieldBoundary } from "@/lib/geo/field-boundary";
+import { CAPE_GIRARDEAU } from "@/lib/defaults/location";
 import type { FieldProfile } from "@/types";
 
 const MOCK_LOCATIONS: Record<
   string,
   { county: string; state: string; soilSeries: string }
 > = {
+  MO: { county: "Cape Girardeau", state: "MO", soilSeries: "Sharkey" },
   IL: { county: "Champaign", state: "IL", soilSeries: "Drummer" },
   IA: { county: "Story", state: "IA", soilSeries: "Clarion" },
   IN: { county: "Tippecanoe", state: "IN", soilSeries: "Raub" },
-  DEFAULT: { county: "Champaign", state: "IL", soilSeries: "Drummer" },
+  DEFAULT: { county: CAPE_GIRARDEAU.county, state: CAPE_GIRARDEAU.state, soilSeries: "Sharkey" },
 };
 
 export function buildMockFieldProfile(
@@ -17,7 +19,7 @@ export function buildMockFieldProfile(
   acres = 40,
   stateHint?: string
 ): FieldProfile {
-  const stateKey = stateHint?.toUpperCase().slice(0, 2) ?? "IL";
+  const stateKey = stateHint?.toUpperCase().slice(0, 2) ?? "MO";
   const loc = MOCK_LOCATIONS[stateKey] ?? MOCK_LOCATIONS.DEFAULT;
 
   return {
@@ -34,7 +36,7 @@ export function buildMockFieldProfile(
       mapUnitName: `${loc.soilSeries} silty clay loam`,
       soilSeries: loc.soilSeries,
       texture: "silty clay loam",
-      slope: "0–2%",
+      slope: "0â€“2%",
       drainageClass: "Poorly drained",
       hydrologicGroup: "B",
       availableWaterCapacity: "0.18 in/in",
@@ -60,7 +62,7 @@ export function buildMockFieldProfile(
       nitrogenDefaultPerLb: 0.52,
       phosphateDefaultPerLb: 0.52,
       potashDefaultPerLb: 0.38,
-      regionLabel: `${loc.state} — USDA AMS regional default`,
+      regionLabel: `${loc.state} â€” USDA AMS regional default`,
       source: "USDA AMS Market News (demo default)",
     },
   };
@@ -94,8 +96,8 @@ export async function fetchFieldProfile(
       failedApis.push("geocode");
     }
 
-    const state = geo?.state ?? "IL";
-    const county = geo?.county ?? "Champaign";
+    const state = geo?.state ?? CAPE_GIRARDEAU.state;
+    const county = geo?.county ?? CAPE_GIRARDEAU.county;
 
     const fetchSafe = async (url: string, name: string) => {
       try {
@@ -148,3 +150,4 @@ export async function fetchFieldProfile(
     };
   }
 }
+

@@ -1,4 +1,4 @@
-export type ConfidenceLevel = "high" | "medium" | "low";
+﻿export type ConfidenceLevel = "high" | "medium" | "low";
 
 export type FieldLocation = {
   lat: number;
@@ -24,6 +24,8 @@ export type SoilContext = {
 };
 
 export type CropBenchmark = {
+  dataAsOf?: string;
+  live?: boolean;
   countyCornYieldBuAc: number;
   stateCornYieldBuAc: number;
   countyCornAcres?: number;
@@ -31,6 +33,8 @@ export type CropBenchmark = {
 };
 
 export type WeatherContext = {
+  dataAsOf?: string;
+  live?: boolean;
   recentRainfallIn?: number;
   droughtRisk: "low" | "moderate" | "elevated";
   forecastSummary: string;
@@ -39,6 +43,8 @@ export type WeatherContext = {
 };
 
 export type FertilizerPrices = {
+  dataAsOf?: string;
+  live?: boolean;
   nitrogenDefaultPerLb: number;
   phosphateDefaultPerLb?: number;
   potashDefaultPerLb?: number;
@@ -157,3 +163,4 @@ export type AppState = {
   peerMatch?: PeerMatchResult;
   profileLoading?: boolean;
 };
+

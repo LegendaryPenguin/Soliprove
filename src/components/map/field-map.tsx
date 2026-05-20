@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
@@ -16,6 +16,7 @@ import type { RecommendationZone } from "@/types";
 import {
   acresFromBoundary,
   centroidFromBoundary,
+  validateBoundary,
 } from "@/lib/geo/field-boundary";
 
 export type MapTileMode = "satellite" | "street";
@@ -114,7 +115,12 @@ function GeomanDraw({
         type: "FeatureCollection",
         features: [gj],
       };
-      onBoundaryChange?.(fc, acresFromBoundary(fc));
+      try {
+        validateBoundary(fc);
+        onBoundaryChange?.(fc, acresFromBoundary(fc));
+      } catch {
+        /* invalid polygon — Geoman layer kept for edit */
+      }
     };
 
     const onUpdate = () => {
@@ -124,7 +130,12 @@ function GeomanDraw({
         type: "FeatureCollection",
         features: [gj],
       };
-      onBoundaryChange?.(fc, acresFromBoundary(fc));
+      try {
+        validateBoundary(fc);
+        onBoundaryChange?.(fc, acresFromBoundary(fc));
+      } catch {
+        /* invalid polygon — Geoman layer kept for edit */
+      }
     };
 
     // Geoman leaflet events
@@ -274,3 +285,4 @@ export function FieldMap({
 }
 
 export { centroidFromBoundary, acresFromBoundary };
+

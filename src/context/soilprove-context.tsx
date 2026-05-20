@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, {
   createContext,
@@ -20,6 +20,8 @@ import { matchPeers } from "@/lib/peer/similarity";
 import { fetchFieldProfile } from "@/lib/mock/field-profile";
 import { STEP_ORDER, getStepIndex } from "@/lib/wizard/steps";
 import { createDemoFieldBoundary } from "@/lib/geo/field-boundary";
+import { CAPE_GIRARDEAU } from "@/lib/defaults/location";
+import { validateFarmerInput } from "@/lib/validation/farmer-input";
 import type { MapTileMode } from "@/components/map/field-map";
 
 const STORAGE_KEY = "soilprove-state";
@@ -45,10 +47,10 @@ export type DraftLocation = {
 };
 
 const DEFAULT_DRAFT: DraftLocation = {
-  lat: 40.1164,
-  lon: -88.2434,
+  lat: CAPE_GIRARDEAU.lat,
+  lon: CAPE_GIRARDEAU.lon,
   acres: 40,
-  zip: "61820",
+  zip: CAPE_GIRARDEAU.zip,
   pinPlaced: true,
   boundaryDrawn: false,
 };
@@ -81,9 +83,10 @@ type SoilProveContextValue = Omit<AppState, "farmerInput"> & {
     boundary?: GeoJSON.FeatureCollection
   ) => Promise<void>;
   setFarmerInput: (input: Partial<FarmerInput>) => void;
-  runRecommendation: () => void;
+  runRecommendation: () => Promise<void>;
   profileChecklist: string[];
   resetWizard: () => void;
+  inputError: string | null;
 };
 
 const SoilProveContext = createContext<SoilProveContextValue | null>(null);
@@ -103,6 +106,7 @@ export function SoilProveProvider({ children }: { children: React.ReactNode }) {
   const [mapTileMode, setMapTileMode] = useState<MapTileMode>("satellite");
   const [mapFullscreen, setMapFullscreen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [inputError, setInputError] = useState<string | null>(null);
 
   const fieldStepChecks = {
     pin: draftLocation.pinPlaced,
@@ -229,12 +233,32 @@ export function SoilProveProvider({ children }: { children: React.ReactNode }) {
     setFarmerInputState((prev) => ({ ...prev, ...partial }));
   }, []);
 
-  const runRecommendation = useCallback(() => {
+  const runRecommendation = useCallback(async () => {
     if (!field) return;
+    const validation = validateFarmerInput(farmerInput);
+    if (!validation.ok) {
+      setInputError(validation.message);
+      return;
+    }
+    setInputError(null);
+    try {
+      const res = await fetch("/api/recommendation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ field, input: farmerInput }),
+      });
+      if (res.ok) {
+        const rec = (await res.json()) as Recommendation;
+        setRecommendation(rec);
+        setPeerMatch(matchPeers(field, farmerInput));
+        return;
+      }
+    } catch {
+      /* client fallback */
+    }
     const rec = buildRecommendation(field, farmerInput);
-    const peers = matchPeers(field, farmerInput);
     setRecommendation(rec);
-    setPeerMatch(peers);
+    setPeerMatch(matchPeers(field, farmerInput));
   }, [field, farmerInput]);
 
   const canGoBack = useCallback(() => getStepIndex(step) > 0, [step]);
@@ -307,10 +331,17 @@ export function SoilProveProvider({ children }: { children: React.ReactNode }) {
         case "context":
           setStep("input");
           break;
-        case "input":
-          runRecommendation();
+        case "input": {
+          const validation = validateFarmerInput(farmerInput);
+          if (!validation.ok) {
+            setInputError(validation.message);
+            return;
+          }
+          setInputError(null);
+          await runRecommendation();
           setStep("results");
           break;
+        }
         case "results":
           setStep("peers");
           break;
@@ -335,6 +366,7 @@ export function SoilProveProvider({ children }: { children: React.ReactNode }) {
     setDemoFallbackActive(false);
     setProfileChecklist([]);
     setLocationError(null);
+    setInputError(null);
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
@@ -370,6 +402,7 @@ export function SoilProveProvider({ children }: { children: React.ReactNode }) {
         runRecommendation,
         profileChecklist,
         resetWizard,
+        inputError,
       }}
     >
       {children}
@@ -382,3 +415,6 @@ export function useSoilProve() {
   if (!ctx) throw new Error("useSoilProve must be used within SoilProveProvider");
   return ctx;
 }
+
+
+

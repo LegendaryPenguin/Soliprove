@@ -1,9 +1,23 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
+import { CAPE_GIRARDEAU } from "@/lib/defaults/location";
 
 type CensusMatch = {
   coordinates?: { x: number; y: number };
   matchedAddress?: string;
 };
+
+function zipFallback(q: string) {
+  return NextResponse.json({
+    results: [
+      {
+        lat: CAPE_GIRARDEAU.lat,
+        lon: CAPE_GIRARDEAU.lon,
+        label: `${q} (demo - Cape Girardeau, MO area)`,
+      },
+    ],
+    demo: true,
+  });
+}
 
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim();
@@ -23,8 +37,7 @@ export async function GET(req: NextRequest) {
     if (!res.ok) throw new Error("Census geocoder unavailable");
 
     const data = await res.json();
-    const matches: CensusMatch[] =
-      data?.result?.addressMatches ?? [];
+    const matches: CensusMatch[] = data?.result?.addressMatches ?? [];
 
     const results = matches.slice(0, 5).map((m) => ({
       lat: m.coordinates?.y ?? 0,
@@ -32,20 +45,14 @@ export async function GET(req: NextRequest) {
       label: m.matchedAddress ?? q,
     }));
 
+    if (results.length === 0 && /^\d{5}$/.test(q)) {
+      return zipFallback(q);
+    }
+
     return NextResponse.json({ results });
   } catch {
-    // Demo fallback for common Midwest ZIP
     if (/^\d{5}$/.test(q)) {
-      return NextResponse.json({
-        results: [
-          {
-            lat: 40.1164,
-            lon: -88.2434,
-            label: `${q} (demo — Champaign, IL area)`,
-          },
-        ],
-        demo: true,
-      });
+      return zipFallback(q);
     }
     return NextResponse.json({ results: [], demo: true });
   }

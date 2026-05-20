@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { MapPinned, ShieldCheck, Sprout, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +31,7 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <p className="text-sm font-medium text-[#1F6F43] uppercase tracking-wider mb-4">
-                Transparent · Field-specific · Explainable
+                Transparent Â· Field-specific Â· Explainable
               </p>
               <h1 className="text-4xl lg:text-5xl font-bold text-[#123524] leading-tight font-display">
                 Smarter fertilizer rates, backed by soil data and nearby proof.
@@ -47,7 +47,7 @@ export default function HomePage() {
                 </Link>
               </Button>
               <p className="text-sm text-[#6B7280] mt-3">
-                6 guided steps · satellite field map · export to equipment
+                6 guided steps Â· satellite field map Â· export to equipment
               </p>
             </div>
             <Card className="card-elevated p-8 hidden lg:block">
@@ -69,7 +69,7 @@ export default function HomePage() {
                 </div>
               </div>
               <p className="text-sm text-[#6B7280] mt-6 text-center">
-                Champaign County, IL demo field
+                Cape Girardeau County, MO demo field
               </p>
             </Card>
           </div>
@@ -106,3 +106,4 @@ export default function HomePage() {
     </div>
   );
 }
+
