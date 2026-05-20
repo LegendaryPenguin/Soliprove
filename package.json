@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "verify": "node scripts/verify-apis.mjs && node scripts/verify-flow.mjs"
+    "verify": "node scripts/verify-apis.mjs && node scripts/verify-flow.mjs && node scripts/verify-engine.mjs"
   },
   "dependencies": {
     "@geoman-io/leaflet-geoman-free": "^2.19.3",

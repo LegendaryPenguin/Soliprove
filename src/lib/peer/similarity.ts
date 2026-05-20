@@ -1,3 +1,15 @@
+/**
+ * Peer similarity matcher — proof-of-concept for the peer-validation layer
+ * that addresses yield-risk aversion (Problem #3).
+ *
+ * Score is a weighted sum across distance, soil texture, rotation, yield
+ * benchmark, organic matter, and drainage. Coefficients are interpretable,
+ * not learned — a grower (or their CCA) can audit why a peer surfaced.
+ *
+ * Data source today: synthetic fixture in `src/data/peer-fields.json`.
+ * Production source: opt-in, anonymized, verified field outcomes. See
+ * `docs/PEER_VALIDATION_AND_OUTCOME_LOOP.md`.
+ */
 import peerFields from "@/data/peer-fields.json";
 import type { FarmerInput, FieldProfile, PeerField, PeerMatchResult } from "@/types";
 

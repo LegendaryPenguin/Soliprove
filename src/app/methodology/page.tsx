@@ -5,7 +5,7 @@ import { SketchButton } from "@/components/landing/sketch-button";
 const SECTIONS = [
   {
     title: "How nitrogen is estimated",
-    body: "Uses MRTN-inspired economics: crop rotation, corn price, nitrogen price, regional baseline rates, organic matter adjustment, and weather risk modifiers. We do not claim exact replication of the official Corn Nitrogen Rate Calculator.",
+    body: "Uses MRTN-inspired economics: crop rotation, corn price, nitrogen price, prototype profitable-range priors, and bounded field-context risk positioning from weather/drainage context. We do not claim exact replication of the official Corn Nitrogen Rate Calculator.",
   },
   {
     title: "How P/K is estimated",

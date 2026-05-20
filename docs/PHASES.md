@@ -2,6 +2,14 @@
 
 Track what shipped in each phase and what remains for a full pilot. **Phase 3 Lite** (current) adds practical improvements without auth/database depth.
 
+> **Engine status:** The nitrogen engine has been upgraded from the legacy
+> ad-hoc heuristic to a prototype MRTN-style range engine
+> (`src/lib/recommendation/nitrogen.ts` + `mrtn-priors.ts`). See
+> [DECISION_ENGINE.md](./DECISION_ENGINE.md) and
+> [SCIENTIFIC_BASIS.md](./SCIENTIFIC_BASIS.md) for the methodology and
+> references. The judge-facing entrypoint is
+> [JUDGE_START_HERE.md](../JUDGE_START_HERE.md).
+
 ---
 
 ## Phase 1 — MVP wizard & rule engine
@@ -82,11 +90,12 @@ Track what shipped in each phase and what remains for a full pilot. **Phase 3 Li
 
 | # | Item | Status |
 |---|------|--------|
-| 1 | SDA SSURGO spatial query | Not started |
-| 2 | NASS Quick Stats (keyed) | **Lite:** optional live + fallback |
-| 3 | Full NWS precip / drought | **Lite:** forecast text |
-| 4 | AMS live fertilizer prices | Not started |
-| 5 | Census reverse geocode | **Lite:** done |
+| 1 | SDA SSURGO spatial query (point intersect + fallback) | **Done** (`src/lib/soil/sda-soil.ts`) |
+| 2 | SDA SSURGO polygon-weighted field aggregation | Not started |
+| 3 | NASS Quick Stats (keyed) | **Lite:** optional live + fallback |
+| 4 | Full NWS precip / drought | **Lite:** forecast text |
+| 5 | AMS live fertilizer prices | Not started |
+| 6 | Census reverse geocode | **Lite:** done |
 
 ---
 

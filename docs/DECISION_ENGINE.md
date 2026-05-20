@@ -166,9 +166,15 @@ support service, the natural next steps are:
 4. **Field outcome database.** Persist post-season yield / applied-N
    outcomes so the engine can learn empirical residuals on top of the
    economic prior.
-5. **Stronger validation layer.** Tighten the Zod schemas around recommended
-   ranges, surface confidence intervals to the UI, and gate exports behind
-   plausibility checks.
-6. **Polygon-based SSURGO enrichment.** Move from point-based SDA to a
-   polygon intersect that returns the dominant-component soil profile per
-   management zone, not just the field centroid.
+5. **Stronger validation and plausibility gates now; calibrated uncertainty
+   later.** Tighten the Zod schemas around recommended ranges and gate
+   exports behind plausibility checks today. Surface true *calibrated*
+   uncertainty intervals to the UI only after outcome data or a documented
+   probabilistic model supports them — fabricating confidence intervals on
+   a heuristic prior would misrepresent what the model knows.
+6. **Polygon-based SSURGO enrichment.** First, replace the centroid-point
+   SDA query with a polygon-weighted intersect that returns the dominant
+   soil component aggregated across the drawn boundary. Zone-level SSURGO
+   enrichment becomes valuable once variable-rate zone logic is
+   agronomically real (e.g., zones tied to map-unit splits or yield-history
+   strata), not before.
