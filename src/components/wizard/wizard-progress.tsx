@@ -11,21 +11,21 @@ export function WizardProgress({ current }: { current: WizardStep }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm font-semibold text-[#1F6F43]">
+        <p className="landing-display text-lg text-[#3D5C3A]">
           Step {currentIndex + 1} of {TOTAL_STEPS}
         </p>
-        <p className="text-sm text-[#6B7280] hidden sm:block">
+        <p className="text-sm text-[#6B4E3D] hidden sm:block">
           {WIZARD_STEPS[currentIndex]?.label}
         </p>
       </div>
 
       <div className="relative">
         <div
-          className="absolute top-5 left-0 right-0 h-0.5 bg-[#E7E0D0] hidden sm:block"
+          className="absolute top-5 left-0 right-0 h-1 bg-[#E7E0D0] hidden sm:block rounded-full"
           aria-hidden
         />
         <div
-          className="absolute top-5 left-0 h-0.5 bg-[#1F6F43] hidden sm:block transition-all duration-300"
+          className="absolute top-5 left-0 h-1 bg-[#4A6B45] hidden sm:block transition-all duration-300 rounded-full"
           style={{
             width:
               currentIndex === 0
@@ -44,13 +44,13 @@ export function WizardProgress({ current }: { current: WizardStep }) {
               <li key={step.id} className="flex flex-col items-center text-center">
                 <div
                   className={cn(
-                    "relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-semibold transition-all",
+                    "relative z-10 flex h-10 w-10 items-center justify-center border-2 text-sm font-bold transition-all",
                     done &&
-                      "border-[#1F6F43] bg-[#1F6F43] text-white shadow-sm",
+                      "border-[#3D5C3A] bg-[#4A6B45] text-white shadow-[2px_2px_0_#2d4529] rounded-[3px_8px_4px_6px]",
                     active &&
-                      "border-[#1F6F43] bg-white text-[#1F6F43] ring-4 ring-[#1F6F43]/15 shadow-md scale-105",
+                      "border-[#3D5C3A] bg-[#F4EFE4] text-[#3D5C3A] ring-2 ring-[#4A6B45]/30 shadow-[2px_3px_0_rgba(42,42,42,0.12)] scale-105 rounded-[4px_10px_5px_8px]",
                     upcoming &&
-                      "border-[#E7E0D0] bg-[#FAF7EF] text-[#9CA3AF]"
+                      "border-[#D4C9B8] bg-[#FAF7EF] text-[#9CA3AF] rounded-[3px_6px_4px_5px]"
                   )}
                 >
                   {done ? (
@@ -62,8 +62,8 @@ export function WizardProgress({ current }: { current: WizardStep }) {
                 <span
                   className={cn(
                     "mt-2 text-[10px] sm:text-xs leading-tight max-w-[4.5rem] sm:max-w-none",
-                    active && "font-semibold text-[#123524]",
-                    done && "text-[#1F6F43]",
+                    active && "font-semibold text-[#1a1a1a]",
+                    done && "text-[#4A6B45]",
                     upcoming && "text-[#9CA3AF]"
                   )}
                 >

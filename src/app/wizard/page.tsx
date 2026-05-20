@@ -61,9 +61,11 @@ function WizardSteps() {
 export default function WizardPage() {
   return (
     <SoilProveProvider>
-      <WizardShell>
-        <WizardSteps />
-      </WizardShell>
+      <div className="wizard-page">
+        <WizardShell>
+          <WizardSteps />
+        </WizardShell>
+      </div>
     </SoilProveProvider>
   );
 }

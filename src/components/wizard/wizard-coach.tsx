@@ -48,17 +48,17 @@ export function WizardCoach({
   return (
     <div
       className={cn(
-        "flex gap-3 rounded-lg border border-[#F2C94C]/50 bg-gradient-to-r from-[#FAF7EF] to-white px-4 py-3 shadow-sm",
-        subStep && "ring-2 ring-[#1F6F43]/20"
+        "flex gap-3 rounded-sm border-2 border-[#F2C94C]/60 bg-gradient-to-r from-[#F4EFE4] to-white px-4 py-3 shadow-[2px_3px_0_rgba(42,42,42,0.06)]",
+        subStep && "ring-2 ring-[#4A6B45]/20"
       )}
       data-coach-highlight={tip.highlight}
     >
       <Lightbulb className="h-5 w-5 shrink-0 text-[#8B5E3C] mt-0.5" />
       <div>
-        <p className="text-sm font-semibold text-[#123524]">{tip.title}</p>
-        <p className="text-xs text-[#6B7280] mt-0.5 leading-relaxed">{tip.body}</p>
+        <p className="landing-display text-lg text-[#1a1a1a]">{tip.title}</p>
+        <p className="text-xs text-[#555] mt-0.5 leading-relaxed">{tip.body}</p>
         {subStep && (
-          <p className="text-xs text-[#1F6F43] mt-1 font-medium">{subStep}</p>
+          <p className="text-xs text-[#4A6B45] mt-1 font-semibold">{subStep}</p>
         )}
       </div>
     </div>

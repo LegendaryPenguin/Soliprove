@@ -100,6 +100,21 @@ h3,
   text-transform: uppercase;
 }
 
+.wizard-card {
+  border-radius: 2px;
+}
+
+.wizard-page input,
+.wizard-page select {
+  border-radius: 2px;
+  border-color: #d4c9b8;
+}
+
+.wizard-page input:focus {
+  border-color: #4a6b45;
+  outline-color: #4a6b45;
+}
+
 .landing-page {
   --landing-cream: #f4efe4;
   --landing-olive: #3d5c3a;

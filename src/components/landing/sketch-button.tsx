@@ -7,6 +7,8 @@ type SketchButtonProps = {
   children: React.ReactNode;
   variant?: "green" | "brown" | "outline";
   className?: string;
+  disabled?: boolean;
+  type?: "button" | "submit";
 };
 
 export function SketchButton({
@@ -15,6 +17,8 @@ export function SketchButton({
   children,
   variant = "green",
   className,
+  disabled,
+  type = "button",
 }: SketchButtonProps) {
   const base =
     "inline-flex items-center justify-center px-6 py-2.5 text-sm font-semibold tracking-wide transition-transform hover:scale-[1.02] active:scale-[0.98]";
@@ -39,7 +43,12 @@ export function SketchButton({
   }
 
   return (
-    <button type="button" onClick={onClick} className={classes}>
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(classes, disabled && "pointer-events-none opacity-50")}
+    >
       {children}
     </button>
   );

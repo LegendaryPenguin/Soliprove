@@ -7,8 +7,9 @@ import {
 } from "./landing-decorations";
 import { LandingNav } from "./landing-nav";
 
-const HERO_IMAGE =
-  "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&q=80";
+import { STOCK } from "@/lib/images/stock-photos";
+
+const HERO_IMAGE = STOCK.heroBarn;
 
 export function LandingHero() {
   return (

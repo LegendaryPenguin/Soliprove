@@ -94,7 +94,10 @@ export function StepContext() {
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="grid gap-3 sm:grid-cols-2">
           {items.map((item) => (
-            <Card key={item.label} className="shadow-none border-[#E7E0D0]">
+            <Card
+              key={item.label}
+              className="wizard-card shadow-[2px_3px_0_rgba(42,42,42,0.06)] border-[#2a2a2a]/10 bg-white/90"
+            >
               <CardContent className="pt-4">
                 <p className="text-xs text-[#6B7280] uppercase tracking-wide">
                   {item.label}

@@ -1,13 +1,13 @@
-"use client";
+﻿"use client";
 
-import Link from "next/link";
 import { AlertCircle, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { WizardProgress } from "@/components/wizard/wizard-progress";
 import { FieldSummarySidebar } from "@/components/wizard/field-summary-sidebar";
 import { getStepConfig } from "@/lib/wizard/steps";
 import { useSoilProve } from "@/context/soilprove-context";
+import { SketchButton } from "@/components/landing/sketch-button";
+import { WizardPageHeader } from "@/components/wizard/wizard-chrome";
 
 export function WizardShell({ children }: { children: React.ReactNode }) {
   const {
@@ -28,46 +28,43 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
   const showLoadingPanel = step === "field" && profileLoading;
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-[#FAF7EF]">
+    <div className="landing-paper min-h-screen">
+      <div
+        className="h-2 w-full bg-[#3D5C3A]"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(90deg, #3D5C3A 0, #3D5C3A 12px, #4A6B45 12px, #4A6B45 24px)",
+        }}
+        aria-hidden
+      />
+
       <div className="mx-auto max-w-6xl px-4 py-6 lg:py-10 space-y-6">
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-            href="/"
-            className="text-xs text-[#6B7280] hover:text-[#1F6F43] inline-flex items-center gap-1"
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <WizardPageHeader
+            title="Build your prescription"
+            subtitle="Six guided steps from field location to exportable fertilizer plan."
+          />
+          <SketchButton
+            type="button"
+            variant="brown"
+            className="text-xs shrink-0"
+            onClick={() => {
+              if (
+                window.confirm("Reset the wizard and clear saved progress?")
+              )
+                resetWizard();
+            }}
           >
-            ← Back to home
-          </Link>
-            <Button
-              type="button"
-              variant="ghost"
-              className="text-xs text-[#6B7280] h-8 px-2"
-              onClick={() => {
-                if (
-                  window.confirm(
-                    "Reset the wizard and clear saved progress?"
-                  )
-                )
-                  resetWizard();
-              }}
-            >
-              Reset wizard
-            </Button>
-          </div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-[#123524] font-display">
-            Build your prescription
-          </h1>
-          <p className="text-[#6B7280] text-sm lg:text-base max-w-2xl">
-            Six guided steps from field location to exportable fertilizer plan.
-          </p>
+            Reset wizard
+          </SketchButton>
         </div>
 
-        <Card className="border-[#E7E0D0] bg-white shadow-sm p-4 sm:p-6">
+        <Card className="wizard-card border-[#2a2a2a]/15 bg-white/95 p-4 sm:p-6 shadow-[3px_4px_0_rgba(42,42,42,0.08)]">
           <WizardProgress current={step} />
         </Card>
 
         {demoFallbackActive && step !== "field" && (
-          <div className="flex items-start gap-2 rounded-lg border border-[#F2C94C]/60 bg-[#F2C94C]/15 px-4 py-3 text-sm text-[#123524]">
+          <div className="flex items-start gap-2 rounded-sm border-2 border-[#F2C94C]/70 bg-[#F2C94C]/20 px-4 py-3 text-sm text-[#1a1a1a]">
             <AlertCircle className="h-4 w-4 shrink-0 text-[#8B5E3C] mt-0.5" />
             <p>
               Using demo fallback data for one or more data sources. The wizard
@@ -76,28 +73,26 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold text-[#123524]">{config.title}</h2>
-          <p className="text-[#6B7280]">{config.description}</p>
-          <p className="text-sm text-[#8B5E3C] border-l-4 border-[#F2C94C] pl-3 py-0.5">
-            {config.helper}
-          </p>
+        <div className="space-y-2 border-l-4 border-[#4A6B45] pl-4">
+          <h2 className="landing-display text-2xl text-[#1a1a1a]">
+            {config.title}
+          </h2>
+          <p className="text-sm text-[#555]">{config.description}</p>
+          <p className="text-sm text-[#6B4E3D]">{config.helper}</p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_280px] items-start">
-          <Card className="card-elevated border-[#E7E0D0] overflow-hidden">
+        <div className="grid gap-6 lg:grid-cols-[1fr_300px] items-start">
+          <Card className="wizard-card overflow-hidden border-[#2a2a2a]/20 bg-white/95 shadow-[4px_5px_0_rgba(42,42,42,0.1)]">
             <CardContent className="p-5 sm:p-8">
               {showLoadingPanel && (
-                <div className="mb-6 rounded-lg bg-[#FAF7EF] border border-[#E7E0D0] p-4 text-sm">
-                  <p className="font-medium text-[#123524] mb-2 flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-[#1F6F43]" />
+                <div className="mb-6 rounded-sm border-2 border-[#E7E0D0] bg-[#FAF7EF] p-4 text-sm">
+                  <p className="font-medium text-[#3D5C3A] mb-2 flex items-center gap-2 landing-display text-lg">
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     Building field profile...
                   </p>
-                  <ul className="space-y-1">
+                  <ul className="space-y-1 text-[#4A6B45]">
                     {profileChecklist.map((c) => (
-                      <li key={c} className="text-[#1F6F43]">
-                        ✓ {c}
-                      </li>
+                      <li key={c}>- {c}</li>
                     ))}
                   </ul>
                 </div>
@@ -105,31 +100,30 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
               {children}
             </CardContent>
 
-            <div className="flex items-center justify-between gap-4 border-t border-[#E7E0D0] bg-[#FAF7EF]/50 px-5 sm:px-8 py-4">
-              <Button
+            <div className="flex items-center justify-between gap-4 border-t-2 border-[#E7E0D0] bg-[#F4EFE4]/80 px-5 sm:px-8 py-4">
+              <SketchButton
                 type="button"
-                variant="secondary"
+                variant="brown"
                 onClick={goBack}
                 disabled={!canGoBack() || profileLoading}
-                className="min-w-[100px]"
+                className="min-w-[100px] opacity-90 disabled:opacity-40"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back
-              </Button>
+              </SketchButton>
 
               {step === "export" ? (
-                <Button asChild variant="accent" className="min-w-[140px]">
-                  <Link href="/">
-                    Finish
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
+                <SketchButton href="/" variant="green" className="min-w-[140px]">
+                  Finish
+                  <ArrowRight className="h-4 w-4" />
+                </SketchButton>
               ) : (
-                <Button
+                <SketchButton
                   type="button"
+                  variant="green"
                   onClick={() => void goNext()}
                   disabled={!canGoNext() || profileLoading || isContinuing}
-                  className="min-w-[140px]"
+                  className="min-w-[140px] disabled:opacity-50"
                 >
                   {profileLoading || isContinuing ? (
                     <>
@@ -142,7 +136,7 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}
-                </Button>
+                </SketchButton>
               )}
             </div>
           </Card>
@@ -150,6 +144,13 @@ export function WizardShell({ children }: { children: React.ReactNode }) {
           <FieldSummarySidebar />
         </div>
       </div>
+
+      <div
+        className="mt-10 h-8 w-full bg-[length:100%_100%] bg-bottom bg-no-repeat"
+        style={{ backgroundImage: "url(/landing/fence-bottom.svg)" }}
+        aria-hidden
+      />
     </div>
   );
 }
+
