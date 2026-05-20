@@ -29,6 +29,7 @@ export function buildRecommendation(
     organicMatter:
       input.soilTest?.organicMatterPct ?? field.soil?.organicMatterEstimate,
     weatherRisk: weatherRiskFromProfile(field),
+    drainageClass: field.soil?.drainageClass,
   });
 
   const p2o5Rate = recommendP(

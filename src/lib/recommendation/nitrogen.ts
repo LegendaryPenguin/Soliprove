@@ -1,26 +1,6 @@
-﻿import { clamp } from "@/lib/utils";
+import { clamp } from "@/lib/utils";
 import type { FarmerInput, FieldProfile } from "@/types";
-
-const STATE_BASE_RATES: Record<string, number> = {
-  IL: 168,
-  IA: 165,
-  IN: 162,
-  OH: 160,
-  MN: 155,
-  WI: 158,
-  NE: 170,
-  KS: 175,
-  MO: 168,
-  DEFAULT: 165,
-};
-
-export function getBaseMRTNLikeRate(
-  state: string,
-  rotation: FarmerInput["rotation"]
-): number {
-  const base = STATE_BASE_RATES[state.toUpperCase()] ?? STATE_BASE_RATES.DEFAULT;
-  return rotation === "corn_after_corn" ? base + 25 : base;
-}
+import { getMrtnPrior } from "./mrtn-priors";
 
 export type NitrogenInput = {
   state: string;
@@ -29,22 +9,55 @@ export type NitrogenInput = {
   nitrogenPricePerLb: number;
   organicMatter?: number;
   weatherRisk?: "normal" | "wet_spring" | "dry";
+  drainageClass?: string;
 };
 
+/**
+ * Prototype MRTN-style nitrogen decision engine.
+ *
+ * Flow:
+ *   1. Compute price ratio = $/lb N ÷ $/bu corn
+ *   2. Select a prototype prior (state × rotation × price band) that exposes a
+ *      profitable range [L, M, H]
+ *   3. Compute a bounded weather + drainage bias in [-0.35, +0.35]
+ *   4. Position the final rate inside the profitable range:
+ *        bias ≥ 0 → M + bias·(H − M)
+ *        bias < 0 → M + bias·(M − L)
+ *   5. Return Math.round(rate), clamped to [L, H]
+ *
+ * Bias coefficients are transparent demonstration heuristics, not official
+ * agronomic coefficients. See docs/DECISION_ENGINE.md and
+ * docs/SCIENTIFIC_BASIS.md for context.
+ */
 export function recommendNitrogen(input: NitrogenInput): number {
-  const baseRate = getBaseMRTNLikeRate(input.state, input.rotation);
   const priceRatio = input.nitrogenPricePerLb / input.cornPricePerBu;
+  const prior = getMrtnPrior(input.state, input.rotation, priceRatio);
 
-  let rate = baseRate;
+  const L = prior.profitableLow;
+  const M = prior.mrtnRate;
+  const H = prior.profitableHigh;
 
-  if (priceRatio > 0.2) rate -= 20;
-  else if (priceRatio > 0.15) rate -= 10;
+  let weatherBias = 0;
+  if (input.weatherRisk === "wet_spring") weatherBias = 0.2;
+  else if (input.weatherRisk === "dry") weatherBias = -0.1;
 
-  if ((input.organicMatter ?? 0) > 4) rate -= 8;
-  if (input.weatherRisk === "wet_spring") rate += 8;
-  if (input.weatherRisk === "dry") rate -= 5;
+  let drainageBias = 0;
+  const drainage = input.drainageClass?.toLowerCase();
+  if (drainage) {
+    // Ordering matters: check "somewhat poorly" before the broader "poorly".
+    if (drainage.includes("somewhat poorly")) drainageBias = 0.08;
+    else if (drainage.includes("very poorly")) drainageBias = 0.15;
+    else if (drainage.includes("poorly")) drainageBias = 0.15;
+    else if (drainage.includes("moderately well")) drainageBias = 0;
+    else if (drainage.includes("well drained")) drainageBias = 0;
+  }
 
-  return Math.round(clamp(rate, baseRate - 35, baseRate + 35));
+  let bias = weatherBias + drainageBias;
+  bias = clamp(bias, -0.35, 0.35);
+
+  const rate = bias >= 0 ? M + bias * (H - M) : M + bias * (M - L);
+
+  return clamp(Math.round(rate), L, H);
 }
 
 export function nitrogenPricePerLbFromFarmer(input: FarmerInput): number {
@@ -70,4 +83,3 @@ export function weatherRiskFromProfile(
     return "wet_spring";
   return "normal";
 }
-
