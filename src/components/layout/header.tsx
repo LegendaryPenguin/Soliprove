@@ -1,7 +1,17 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Sprout } from "lucide-react";
 
 export function Header() {
+  const pathname = usePathname();
+  const isLanding = pathname === "/";
+
+  if (isLanding) {
+    return null;
+  }
+
   return (
     <header className="border-b border-[#E7E0D0] bg-white/90 backdrop-blur sticky top-0 z-50">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">

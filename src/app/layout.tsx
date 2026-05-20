@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, DM_Serif_Display, Lato } from "next/font/google";
 import { IBM_Plex_Sans } from "next/font/google";
 import { Header } from "@/components/layout/header";
 import "./globals.css";
@@ -20,6 +20,18 @@ const plexSans = IBM_Plex_Sans({
   weight: ["500", "600", "700"],
 });
 
+const landingDisplay = DM_Serif_Display({
+  variable: "--font-landing-display",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
+const landingBody = Lato({
+  variable: "--font-landing-body",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
 export const metadata: Metadata = {
   title: "SoilProve — Field-specific fertilizer prescriptions",
   description:
@@ -34,9 +46,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${plexSans.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${plexSans.variable} ${landingDisplay.variable} ${landingBody.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#FAF7EF] text-[#123524]">
+      <body className="min-h-full flex flex-col bg-[#F4EFE4] text-[#123524]">
         <Header />
         <main className="flex-1">{children}</main>
       </body>
