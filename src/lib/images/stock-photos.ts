@@ -1,23 +1,21 @@
-/** Verified Unsplash IDs for landing + wizard imagery */
+/** Local assets in /public/landing + Unsplash for hero/wizard */
 export const STOCK = {
   heroBarn:
     "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&q=80",
   farmHouse:
     "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80",
-  cornField:
-    "https://images.unsplash.com/photo-1574323863100-15506133fd3c?w=800&q=80",
-  fieldHills:
-    "https://images.unsplash.com/photo-1501594907357-962cdeeda703?w=800&q=80",
+  cornField: "/landing/corn-field.jpg",
+  fieldHills: "/landing/rolling-farmland.jpg",
   tractor:
     "https://images.unsplash.com/photo-1625246333195-78d9c38a308e?w=800&q=80",
   soilHands:
     "https://images.unsplash.com/photo-1464224924808-ff83a7938414?w=800&q=80",
   peers: [
-    "https://images.unsplash.com/photo-1574323863100-15506133fd3c?w=400&q=80",
+    "/landing/corn-field.jpg",
     "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&q=80",
     "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&q=80",
-    "https://images.unsplash.com/photo-1592982537077-d031aca4f69f?w=400&q=80",
-    "https://images.unsplash.com/photo-1501594907357-962cdeeda703?w=400&q=80",
+    "/landing/corn-field.jpg",
+    "/landing/rolling-farmland.jpg",
     "https://images.unsplash.com/photo-1464224924808-ff83a7938414?w=400&q=80",
   ],
 } as const;
